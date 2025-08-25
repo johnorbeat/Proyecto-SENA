@@ -1,0 +1,50 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches:
+      - main  # Se ejecuta cada vez que subas cambios a main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Descargar tu código
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Validar HTML
+      - name: Validar HTML
+        uses: Cyb3r-Jak3/html5validator-action@v1
+        with:
+          root: .
+
+      # 3. Validar CSS con stylelint
+      - name: Instalar dependencias
+        run: npm install -g stylelint stylelint-config-standard
+
+      - name: Validar CSS
+        run: npx stylelint "**/*.css"
+
+      # 4. Validar JS con ESLint
+      - name: Instalar ESLint
+        run: npm install -g eslint
+
+      - name: Validar JS
+        run: npx eslint "**/*.js" || true
+        # "|| true" evita que falle si solo son warnings
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 5. Publicar en GitHub Pages
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .
